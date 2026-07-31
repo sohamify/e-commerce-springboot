@@ -49,5 +49,5 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --service-account ecommerce-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-            --set-env-vars SPRING_PROFILES_ACTIVE=prod,SUPABASE_DB_HOST=db.nxyzbulyzvdjocwumxcv.supabase.co,SUPABASE_DB_USER=postgres,SUPABASE_POOLER_HOST=aws-0-us-east-1.pooler.supabase.com,SUPABASE_POOLER_USER=postgres.nxyzbulyzvdjocwumxcv,UPSTASH_REDIS_HOST=allowing-squirrel-43503.upstash.io,UPSTASH_REDIS_PORT=6379 \
+            --set-env-vars SPRING_PROFILES_ACTIVE=prod,SUPABASE_DB_HOST=db.nxyzbulyzvdjocwumxcv.supabase.co,SUPABASE_DB_USER=postgres,SUPABASE_POOLER_HOST=aws-0-ap-northeast-2.pooler.supabase.com,SUPABASE_POOLER_USER=postgres.nxyzbulyzvdjocwumxcv,UPSTASH_REDIS_HOST=allowing-squirrel-43503.upstash.io,UPSTASH_REDIS_PORT=6379 \
             --set-secrets SUPABASE_DB_PASSWORD=supabase-db-password:latest,UPSTASH_REDIS_PASSWORD=upstash-password:latest
