@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "e-commerce-bb89d"
+  },
+  "targets": {
+    "e-commerce-bb89d": {
+      "hosting": {
+        "storefront": [
+          "ecommerce-bb89d-storefront"
+        ],
+        "admin": [
+          "ecommerce-bb89d-admin"
+        ]
+      }
+    }
+  }
+}
