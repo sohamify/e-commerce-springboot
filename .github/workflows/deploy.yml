@@ -1,33 +1,30 @@
 name: Deploy Backend
-
 on:
   push:
     branches: [main]
     paths: ['backend/**']
+  workflow_dispatch:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-
+      - name: Make mvnw executable
+        run: chmod +x backend/mvnw
       - name: Run tests
         run: cd backend && ./mvnw test
-
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
-
       - name: Build and push image
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
@@ -42,17 +39,15 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
-
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy ecommerce-backend `
-            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ecommerce/backend:${{ github.sha }} `
-            --region us-central1 `
-            --platform managed `
-            --allow-unauthenticated `
-            --service-account ecommerce-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com `
-            --set-env-vars SPRING_PROFILES_ACTIVE=prod `
+          gcloud run deploy ecommerce-backend \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ecommerce/backend:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ecommerce-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --set-env-vars SPRING_PROFILES_ACTIVE=prod \
             --set-secrets SUPABASE_DB_PASSWORD=supabase-db-password:latest,UPSTASH_REDIS_PASSWORD=upstash-password:latest
