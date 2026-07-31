@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce
+    username: dev
+    password: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate   # Flyway owns the schema, not Hibernate
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gcp:
+      project-id: e-commerce-bb89d
+      pubsub:
+        emulator-host: localhost:8085
+  flyway:
+    enabled: true
+app:
+  storage:
+    bucket: ecommerce-dev
+    emulator-host: http://localhost:4443

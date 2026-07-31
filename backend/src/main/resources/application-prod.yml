@@ -1,0 +1,33 @@
+# application-prod.yml
+spring:
+  datasource:
+    # Supabase pooled connection (PgBouncer, transaction mode) for app runtime.
+    # prepareThreshold=0 disables server-side prepared statements, which PgBouncer
+    # transaction pooling does not support.
+    url: jdbc:postgresql://${SUPABASE_DB_HOST}:6543/postgres?sslmode=require&prepareThreshold=0
+    username: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  data:
+    redis:
+      host: ${UPSTASH_REDIS_HOST}
+      port: ${UPSTASH_REDIS_PORT:6379}
+      password: ${UPSTASH_REDIS_PASSWORD}
+      ssl:
+        enabled: true
+  cloud:
+    gcp:
+      project-id: e-commerce-bb89d
+  flyway:
+    enabled: true
+    # Supabase direct connection (not pooled) — Flyway's schema history locking
+    # needs a session-mode connection, not PgBouncer transaction pooling.
+    url: jdbc:postgresql://${SUPABASE_DB_HOST}:5432/postgres?sslmode=require
+    user: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+app:
+  storage:
+    bucket: ${STORAGE_BUCKET:e-commerce-bb89d.firebasestorage.app}
