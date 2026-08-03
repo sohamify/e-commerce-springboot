@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { messagingApi } from '../api/messagingApi'
+import { ErrorState } from '../components/ErrorState'
+import { Skeleton } from '../components/Skeleton'
 import { useAuthStore } from '../store/authStore'
 
 export function ThreadPage() {
@@ -10,7 +12,7 @@ export function ThreadPage() {
   const queryClient = useQueryClient()
   const [body, setBody] = useState('')
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['thread-messages', threadId],
     queryFn: () => messagingApi.messages(threadId!),
   })
@@ -24,8 +26,25 @@ export function ThreadPage() {
     },
   })
 
-  if (isPending) return <p>Loading&hellip;</p>
-  if (isError || !data) return <p>Could not load this conversation.</p>
+  if (isPending) {
+    return (
+      <section className="thread-page">
+        <h1>Conversation</h1>
+        <div className="message-list" aria-hidden="true">
+          <div className="message-bubble">
+            <Skeleton width={160} height={20} />
+          </div>
+          <div className="message-bubble message-bubble-mine">
+            <Skeleton width={120} height={20} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (isError || !data) {
+    return <ErrorState message="Couldn't load this conversation." onRetry={() => refetch()} />
+  }
 
   return (
     <section className="thread-page">

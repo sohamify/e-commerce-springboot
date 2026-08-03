@@ -16,7 +16,7 @@ export function OrderList({
       {orders.map((order) => (
         <li key={order.listingId} className="order-list-item">
           <Link to={`/listings/${order.listingId}`} className="order-list-link">
-            {order.primaryPhotoUrl && <img src={order.primaryPhotoUrl} alt="" />}
+            {order.primaryPhotoUrl && <img src={order.primaryPhotoUrl} alt={order.title} />}
             <div>
               <p className="order-title">{order.title}</p>
               <p className="order-price">${order.price.toFixed(2)}</p>

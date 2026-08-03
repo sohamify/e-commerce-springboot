@@ -2,10 +2,21 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminApi } from '../api/adminApi'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
+import { TableRowsSkeleton } from '../components/Skeleton'
+import { StatusBadge } from '../components/StatusBadge'
+import type { UserStatus } from '../types/admin'
+
+const STATUS_TONE: Record<UserStatus, 'sage' | 'mustard' | 'danger'> = {
+  ACTIVE: 'sage',
+  SUSPENDED: 'mustard',
+  BANNED: 'danger',
+}
 
 export function UsersPage() {
   const [q, setQ] = useState('')
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['admin-users', q],
     queryFn: () => adminApi.searchUsers(q),
   })
@@ -20,11 +31,12 @@ export function UsersPage() {
         onChange={(e) => setQ(e.target.value)}
       />
 
-      {isPending && <p>Loading&hellip;</p>}
-      {isError && <p>Could not load users.</p>}
-      {data && data.length === 0 && <p>No users found.</p>}
+      {isError && <ErrorState message="Couldn't load users." onRetry={() => refetch()} />}
+      {data && data.length === 0 && (
+        <EmptyState title="No users found" message="Try a different search term." />
+      )}
 
-      {data && data.length > 0 && (
+      {(isPending || (data && data.length > 0)) && (
         <table className="listing-table">
           <thead>
             <tr>
@@ -36,12 +48,15 @@ export function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {data.map((user) => (
+            {isPending && <TableRowsSkeleton columns={5} />}
+            {data?.map((user) => (
               <tr key={user.id}>
                 <td>{user.email}</td>
                 <td>{user.displayName}</td>
                 <td>{user.role}</td>
-                <td>{user.status}</td>
+                <td>
+                  <StatusBadge label={user.status} tone={STATUS_TONE[user.status]} />
+                </td>
                 <td>
                   <Link to={`/users/${user.id}`}>View</Link>
                 </td>

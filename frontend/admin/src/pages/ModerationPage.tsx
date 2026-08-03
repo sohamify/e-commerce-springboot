@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminApi } from '../api/adminApi'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
+import { TableRowsSkeleton } from '../components/Skeleton'
+import { StatusBadge } from '../components/StatusBadge'
 import type { ListingStatus } from '../types/admin'
 
 const STATUS_OPTIONS: { value: ListingStatus | ''; label: string }[] = [
@@ -11,11 +15,18 @@ const STATUS_OPTIONS: { value: ListingStatus | ''; label: string }[] = [
   { value: '', label: 'All' },
 ]
 
+const STATUS_TONE: Record<ListingStatus, 'sage' | 'mustard' | 'danger' | 'neutral'> = {
+  ACTIVE: 'sage',
+  SOLD: 'neutral',
+  REMOVED: 'danger',
+  FLAGGED: 'mustard',
+}
+
 export function ModerationPage() {
   const [status, setStatus] = useState<ListingStatus | ''>('FLAGGED')
   const queryClient = useQueryClient()
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['admin-listings', status],
     queryFn: () => adminApi.listings(status || undefined),
   })
@@ -42,11 +53,16 @@ export function ModerationPage() {
         ))}
       </select>
 
-      {isPending && <p>Loading&hellip;</p>}
-      {isError && <p>Could not load listings.</p>}
-      {data && data.length === 0 && <p>Nothing here.</p>}
+      {isError && <ErrorState message="Couldn't load listings." onRetry={() => refetch()} />}
 
-      {data && data.length > 0 && (
+      {data && data.length === 0 && (
+        <EmptyState
+          title="Nothing here"
+          message={status === 'FLAGGED' ? 'No listings currently need review.' : 'No listings match this filter.'}
+        />
+      )}
+
+      {(isPending || (data && data.length > 0)) && (
         <table className="listing-table">
           <thead>
             <tr>
@@ -58,11 +74,14 @@ export function ModerationPage() {
             </tr>
           </thead>
           <tbody>
-            {data.map((listing) => (
+            {isPending && <TableRowsSkeleton columns={5} />}
+            {data?.map((listing) => (
               <tr key={listing.id}>
                 <td>{listing.title}</td>
                 <td>{listing.seller?.displayName}</td>
-                <td>{listing.status}</td>
+                <td>
+                  <StatusBadge label={listing.status} tone={STATUS_TONE[listing.status]} />
+                </td>
                 <td>${listing.price.toFixed(2)}</td>
                 <td>
                   {listing.status !== 'REMOVED' && (

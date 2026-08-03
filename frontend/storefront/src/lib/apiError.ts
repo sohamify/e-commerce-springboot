@@ -14,3 +14,11 @@ export function apiErrorCode(error: unknown): string | undefined {
   }
   return undefined
 }
+
+/** Per-field validation messages from a 400 VALIDATION_FAILED response, keyed by field name. */
+export function apiFieldErrors(error: unknown): Record<string, string> {
+  if (isAxiosError<ApiProblem>(error)) {
+    return error.response?.data?.fieldErrors ?? {}
+  }
+  return {}
+}

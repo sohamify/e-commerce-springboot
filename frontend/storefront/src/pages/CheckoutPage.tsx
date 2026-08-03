@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
 import { ConditionBadge } from '../components/ConditionBadge'
+import { EmptyState } from '../components/EmptyState'
+import { Skeleton } from '../components/Skeleton'
 import { apiErrorMessage } from '../lib/apiError'
 
 export function CheckoutPage() {
@@ -27,15 +29,46 @@ export function CheckoutPage() {
     onError: (err) => setError(apiErrorMessage(err, 'Could not complete this purchase.')),
   })
 
-  if (isPending) return <p>Loading&hellip;</p>
-  if (isError || !listing) return <p>Listing not found.</p>
+  if (isPending) {
+    return (
+      <section className="checkout-page">
+        <div className="checkout-summary">
+          <Skeleton width={120} height={120} radius="sm" />
+          <div className="form-field-group">
+            <Skeleton width="60%" height={24} />
+            <Skeleton width={90} height={20} />
+            <Skeleton width={120} height={28} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (isError || !listing) {
+    return (
+      <EmptyState
+        title="Listing not found"
+        message="It may have been removed, or the link is off."
+        action={
+          <Link className="form-submit" to="/">
+            Back to browsing
+          </Link>
+        }
+      />
+    )
+  }
 
   if (listing.status !== 'ACTIVE') {
     return (
-      <section className="checkout-page">
-        <p>This item is no longer available.</p>
-        <Link to={`/listings/${listing.id}`}>Back to listing</Link>
-      </section>
+      <EmptyState
+        title="This item is no longer available"
+        message="Someone may have already bought it, or the seller took it down."
+        action={
+          <Link className="form-submit" to={`/listings/${listing.id}`}>
+            Back to listing
+          </Link>
+        }
+      />
     )
   }
 
@@ -49,7 +82,7 @@ export function CheckoutPage() {
           <h2>{listing.title}</h2>
           <ConditionBadge condition={listing.condition} />
           <p className="listing-detail-price">${listing.price.toFixed(2)}</p>
-          <p>Sold by {listing.seller.displayName}</p>
+          <p className="text-secondary">Sold by {listing.seller.displayName}</p>
           <p className="checkout-scarcity">1 of 1 — first to buy gets it.</p>
         </div>
       </div>
@@ -63,9 +96,9 @@ export function CheckoutPage() {
           purchaseMutation.mutate()
         }}
       >
-        <fieldset className="form-field">
+        <fieldset className="form-field-group">
           <legend className="form-field-label">Delivery</legend>
-          <label>
+          <label className="checkout-radio-option">
             <input
               type="radio"
               name="delivery"
@@ -74,7 +107,7 @@ export function CheckoutPage() {
             />
             Local pickup{listing.location ? ` (${listing.location})` : ''}
           </label>
-          <label>
+          <label className="checkout-radio-option">
             <input
               type="radio"
               name="delivery"

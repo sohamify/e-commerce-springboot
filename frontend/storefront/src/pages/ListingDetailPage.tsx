@@ -3,9 +3,11 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
 import { ConditionBadge } from '../components/ConditionBadge'
+import { EmptyState } from '../components/EmptyState'
 import { MessageSellerButton } from '../components/MessageSellerButton'
 import { ReportButton } from '../components/ReportButton'
 import { SellerCard } from '../components/SellerCard'
+import { Skeleton } from '../components/Skeleton'
 import { apiErrorMessage } from '../lib/apiError'
 import { useAuthStore } from '../store/authStore'
 import { LISTING_CATEGORIES } from '../types/listing'
@@ -36,8 +38,35 @@ export function ListingDetailPage() {
     onError: (err) => setError(apiErrorMessage(err)),
   })
 
-  if (isPending) return <p>Loading listing&hellip;</p>
-  if (isError || !listing) return <p>Listing not found.</p>
+  if (isPending) {
+    return (
+      <section className="listing-detail-page">
+        <div className="listing-detail-photos">
+          <Skeleton className="listing-detail-photo-main" height="100%" radius="md" />
+        </div>
+        <div className="listing-detail-body">
+          <Skeleton width={90} height={22} />
+          <Skeleton width="60%" height={36} />
+          <Skeleton width={120} height={28} />
+          <Skeleton width="100%" height={80} />
+        </div>
+      </section>
+    )
+  }
+
+  if (isError || !listing) {
+    return (
+      <EmptyState
+        title="Listing not found"
+        message="It may have been removed, or the link is off."
+        action={
+          <Link className="form-submit" to="/">
+            Back to browsing
+          </Link>
+        }
+      />
+    )
+  }
 
   const isOwner = user?.id === listing.seller.id
   const categoryLabel = LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ?? listing.category
@@ -62,6 +91,8 @@ export function ListingDetailPage() {
                 type="button"
                 className={`listing-detail-thumbnail ${i === activePhoto ? 'active' : ''}`}
                 onClick={() => setActivePhoto(i)}
+                aria-label={`View photo ${i + 1} of ${listing.photoUrls.length}`}
+                aria-current={i === activePhoto}
               >
                 <img src={url} alt="" />
               </button>
@@ -74,7 +105,7 @@ export function ListingDetailPage() {
         <ConditionBadge condition={listing.condition} />
         <h1>{listing.title}</h1>
         <p className="listing-detail-price">${listing.price.toFixed(2)}</p>
-        <p className="listing-detail-meta">
+        <p className="listing-detail-meta text-secondary">
           {categoryLabel}
           {listing.location && ` · ${listing.location}`}
         </p>
@@ -97,7 +128,7 @@ export function ListingDetailPage() {
         {isOwner ? (
           listing.status === 'ACTIVE' && (
             <div className="listing-detail-actions">
-              <Link className="form-submit" to={`/listings/${listing.id}/edit`}>
+              <Link className="form-submit form-submit-secondary" to={`/listings/${listing.id}/edit`}>
                 Edit
               </Link>
               <button

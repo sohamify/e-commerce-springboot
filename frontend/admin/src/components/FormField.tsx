@@ -23,7 +23,7 @@ export function FormField({
     <label className="form-field">
       <span className="form-field-label">{label}</span>
       <input
-        className="form-field-input"
+        className={`form-field-input${error ? ' has-error' : ''}`}
         type={type}
         name={name}
         value={value}

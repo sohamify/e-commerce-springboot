@@ -1,6 +1,7 @@
 :root {
   /* "Found" palette, admin variant — same warm base as the storefront, but the accent is Forest
-     rather than Terracotta, so it's visually obvious you're in platform-management tools. */
+     rather than Terracotta, so it's visually obvious you're in platform-management tools.
+     Do not change these five colors or the two typefaces. */
   --terracotta: #c1652f;
   --forest: #2f4a3d;
   --cream: #faf6f0;
@@ -8,8 +9,12 @@
   --charcoal: #2b2620;
   --sage: #8fa377;
 
-  --text: rgba(43, 38, 32, 0.68);
-  --text-h: var(--charcoal);
+  --text-primary: var(--charcoal);
+  --text-secondary: #6b6459;
+  --text-muted: #756d54;
+  --text: var(--text-secondary);
+  --text-h: var(--text-primary);
+
   --bg: var(--cream);
   --border: #e4d9c8;
   --code-bg: #f1e9dc;
@@ -17,8 +22,11 @@
   --accent-bg: rgba(47, 74, 61, 0.1);
   --accent-border: rgba(47, 74, 61, 0.4);
   --social-bg: rgba(241, 233, 220, 0.6);
-  --shadow:
-    rgba(43, 38, 32, 0.08) 0 10px 15px -3px, rgba(43, 38, 32, 0.05) 0 4px 6px -2px;
+  /* Forest is dark enough that it doesn't need a separate text/solid-button variant like the
+     storefront's terracotta does — it already clears 4.5:1 as text and with white button text. */
+  --accent-text: var(--accent);
+  --accent-solid-bg: var(--accent);
+  --on-solid: white;
 
   --sage-text: #3f5c34;
   --sage-bg: rgba(143, 163, 119, 0.18);
@@ -26,39 +34,88 @@
   --mustard-text: #8a5a16;
   --mustard-bg: rgba(232, 163, 61, 0.2);
   --mustard-border: rgba(232, 163, 61, 0.5);
+  --danger: #b3413a;
+  --danger-bg: rgba(179, 65, 58, 0.1);
+  --danger-border: rgba(179, 65, 58, 0.4);
+
+  --sp-4: 4px;
+  --sp-8: 8px;
+  --sp-12: 12px;
+  --sp-16: 16px;
+  --sp-24: 24px;
+  --sp-32: 32px;
+  --sp-48: 48px;
+  --sp-64: 64px;
+  --sp-96: 96px;
+
+  --content-max: 1280px;
+  --page-padding-mobile: var(--sp-24);
+  --page-padding-desktop: var(--sp-48);
+  --prose-max: 680px;
+
+  --fs-h1: 44px;
+  --fs-h1-mobile: 32px;
+  --fs-h2: 30px;
+  --fs-h2-mobile: 22px;
+  --fs-h3: 19px;
+  --fs-body: 16px;
+  --fs-secondary: 14px;
+  --fs-micro: 13px;
+  --lh-heading: 1.25;
+  --lh-body: 1.6;
+  --lh-ui: 1.4;
 
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Fraunces', Georgia, serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(43, 38, 32, 0.06), 0 1px 3px rgba(43, 38, 32, 0.08);
+  --shadow-md: 0 4px 10px rgba(43, 38, 32, 0.1), 0 2px 4px rgba(43, 38, 32, 0.08);
+  --shadow-lg: 0 8px 24px rgba(43, 38, 32, 0.16);
+  --shadow: var(--shadow-md);
+
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-panel: 250ms;
+
+  font: var(--fs-body)/var(--lh-body) var(--sans);
   letter-spacing: 0.1px;
   color-scheme: light dark;
-  color: var(--text);
+  color: var(--text-secondary);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #cabfab;
-    --text-h: #f4ede1;
+    --text-primary: #f4ede1;
+    --text-secondary: #cabfab;
+    --text-muted: #948c7e;
+    --text: var(--text-secondary);
+    --text-h: var(--text-primary);
     --bg: #211c16;
     --border: #3c342a;
     --code-bg: #2a241c;
-    --accent: #5c8770;
-    --accent-bg: rgba(92, 135, 112, 0.18);
-    --accent-border: rgba(92, 135, 112, 0.5);
+    /* Lighter than the light-mode forest (needed to read as text on a dark background), which
+       means it's now too light to pair with white button text — solid buttons use dark text. */
+    --accent: #82928b;
+    --accent-bg: rgba(130, 146, 139, 0.18);
+    --accent-border: rgba(130, 146, 139, 0.5);
     --social-bg: rgba(42, 36, 28, 0.6);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --accent-text: var(--accent);
+    --accent-solid-bg: var(--accent);
+    --on-solid: var(--charcoal);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow: var(--shadow-md);
 
     --sage-text: #b7cba3;
     --sage-bg: rgba(143, 163, 119, 0.2);
@@ -66,6 +123,9 @@
     --mustard-text: #f0c17d;
     --mustard-bg: rgba(232, 163, 61, 0.2);
     --mustard-border: rgba(232, 163, 61, 0.5);
+    --danger: #e08a84;
+    --danger-bg: rgba(224, 138, 132, 0.15);
+    --danger-border: rgba(224, 138, 132, 0.45);
   }
 
   #social .button-icon {
@@ -73,16 +133,15 @@
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 body {
@@ -93,34 +152,58 @@ h1,
 h2,
 h3 {
   font-family: var(--heading);
-  color: var(--text-h);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 h1 {
-  font-size: 52px;
-  font-weight: 600;
-  letter-spacing: -0.6px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 34px;
-    margin: 20px 0;
+  font-size: var(--fs-h1-mobile);
+  line-height: var(--lh-heading);
+  letter-spacing: -0.4px;
+  margin: 0 0 var(--sp-16);
+  @media (min-width: 640px) {
+    font-size: var(--fs-h1);
   }
 }
 h2 {
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 118%;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  font-size: var(--fs-h2-mobile);
+  line-height: var(--lh-heading);
+  margin: 0 0 var(--sp-8);
+  @media (min-width: 640px) {
+    font-size: var(--fs-h2);
   }
 }
 h3 {
-  font-size: 17px;
-  font-weight: 500;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-heading);
+  margin: 0;
 }
 p {
   margin: 0;
+  line-height: var(--lh-body);
+}
+
+small,
+.text-secondary {
+  font-size: var(--fs-secondary);
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-micro {
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  line-height: var(--lh-ui);
+  color: var(--text-muted);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 code,
@@ -128,7 +211,7 @@ code,
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
-  color: var(--text-h);
+  color: var(--text-primary);
 }
 
 code {
