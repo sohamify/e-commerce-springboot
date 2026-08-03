@@ -2,10 +2,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
 import { ConditionBadge } from '../components/ConditionBadge'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
+import { RowSkeleton } from '../components/Skeleton'
+import { StatusBadge } from '../components/StatusBadge'
+import type { ListingStatus } from '../types/listing'
+
+const STATUS_TONE: Record<ListingStatus, 'sage' | 'mustard' | 'danger' | 'neutral'> = {
+  ACTIVE: 'sage',
+  SOLD: 'neutral',
+  REMOVED: 'danger',
+  FLAGGED: 'mustard',
+}
 
 export function MyListingsPage() {
   const queryClient = useQueryClient()
-  const { data, isPending, isError } = useQuery({ queryKey: ['my-listings'], queryFn: listingsApi.mine })
+  const { data, isPending, isError, refetch } = useQuery({ queryKey: ['my-listings'], queryFn: listingsApi.mine })
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => listingsApi.remove(id),
@@ -21,9 +33,19 @@ export function MyListingsPage() {
         </Link>
       </div>
 
-      {isPending && <p>Loading your listings&hellip;</p>}
-      {isError && <p>Could not load your listings.</p>}
-      {data && data.length === 0 && <p>You haven't listed anything yet.</p>}
+      {isPending && <RowSkeleton />}
+      {isError && <ErrorState message="Couldn't load your listings." onRetry={() => refetch()} />}
+      {data && data.length === 0 && (
+        <EmptyState
+          title="Nothing listed yet"
+          message="Your first listing is a couple of photos away."
+          action={
+            <Link className="form-submit" to="/listings/new">
+              Sell an item
+            </Link>
+          }
+        />
+      )}
 
       {data && data.length > 0 && (
         <table className="listing-table">
@@ -46,7 +68,9 @@ export function MyListingsPage() {
                 <td>
                   <ConditionBadge condition={listing.condition} />
                 </td>
-                <td>{listing.status}</td>
+                <td>
+                  <StatusBadge label={listing.status} tone={STATUS_TONE[listing.status]} />
+                </td>
                 <td>
                   {listing.status === 'ACTIVE' && (
                     <>

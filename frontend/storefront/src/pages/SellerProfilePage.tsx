@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { usersApi } from '../api/usersApi'
+import { Avatar } from '../components/Avatar'
+import { EmptyState } from '../components/EmptyState'
+import { RowSkeleton, Skeleton } from '../components/Skeleton'
 import { StarRating } from '../components/StarRating'
 
 export function SellerProfilePage() {
@@ -9,8 +12,23 @@ export function SellerProfilePage() {
   const profile = useQuery({ queryKey: ['seller', id], queryFn: () => usersApi.get(id!) })
   const ratings = useQuery({ queryKey: ['seller-ratings', id], queryFn: () => usersApi.ratings(id!) })
 
-  if (profile.isPending) return <p>Loading&hellip;</p>
-  if (profile.isError || !profile.data) return <p>Seller not found.</p>
+  if (profile.isPending) {
+    return (
+      <section className="seller-profile-page">
+        <div className="seller-profile-header">
+          <Skeleton width={48} height={48} radius="circle" />
+          <div className="form-field-group">
+            <Skeleton width={160} height={24} />
+            <Skeleton width={100} height={16} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (profile.isError || !profile.data) {
+    return <EmptyState title="Seller not found" message="This profile may no longer exist." />
+  }
 
   const seller = profile.data
   const memberSince = new Date(seller.memberSince).toLocaleDateString(undefined, {
@@ -21,16 +39,10 @@ export function SellerProfilePage() {
   return (
     <section className="seller-profile-page">
       <div className="seller-profile-header">
-        {seller.avatarUrl ? (
-          <img className="seller-card-avatar" src={seller.avatarUrl} alt="" />
-        ) : (
-          <span className="seller-card-avatar seller-avatar-placeholder">
-            {seller.displayName.charAt(0).toUpperCase()}
-          </span>
-        )}
+        <Avatar name={seller.displayName} imageUrl={seller.avatarUrl} size="lg" />
         <div>
           <h1>{seller.displayName}</h1>
-          {seller.location && <p>{seller.location}</p>}
+          {seller.location && <p className="text-secondary">{seller.location}</p>}
           <p>
             {seller.ratingCount > 0 && seller.ratingAverage != null ? (
               <>
@@ -38,16 +50,18 @@ export function SellerProfilePage() {
                 {seller.ratingCount} rating{seller.ratingCount === 1 ? '' : 's'})
               </>
             ) : (
-              'No ratings yet'
+              <span className="text-muted">No ratings yet</span>
             )}
           </p>
-          <p>Member since {memberSince}</p>
+          <p className="text-micro">Member since {memberSince}</p>
         </div>
       </div>
 
       <h2>Reviews</h2>
-      {ratings.isPending && <p>Loading reviews&hellip;</p>}
-      {ratings.data && ratings.data.length === 0 && <p>No reviews yet.</p>}
+      {ratings.isPending && <RowSkeleton count={2} />}
+      {ratings.data && ratings.data.length === 0 && (
+        <EmptyState title="No reviews yet" message="Reviews appear here after a completed transaction." />
+      )}
       {ratings.data && ratings.data.length > 0 && (
         <ul className="review-list">
           {ratings.data.map((rating) => (

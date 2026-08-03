@@ -2,7 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
 import { ListingCard } from '../components/ListingCard'
+import { ListingGridSkeleton } from '../components/Skeleton'
 import { LISTING_CATEGORIES, LISTING_CONDITIONS } from '../types/listing'
 import type { ListingCategory, ListingCondition } from '../types/listing'
 
@@ -22,7 +25,11 @@ export function BrowsePage() {
     [searchParams],
   )
 
-  const { data, isPending, isError } = useQuery({
+  const hasFilters = Boolean(
+    params.q || params.category || params.condition || params.minPrice || params.maxPrice || params.location,
+  )
+
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['listings', params],
     queryFn: () => listingsApi.search(params),
   })
@@ -103,9 +110,20 @@ export function BrowsePage() {
         />
       </form>
 
-      {isPending && <p>Loading listings&hellip;</p>}
-      {isError && <p>Could not load listings.</p>}
-      {data && data.items.length === 0 && <p>No listings match those filters yet.</p>}
+      {isPending && <ListingGridSkeleton />}
+
+      {isError && <ErrorState message="Couldn't load listings." onRetry={() => refetch()} />}
+
+      {data && data.items.length === 0 && (
+        <EmptyState
+          title={hasFilters ? 'Nothing matches those filters' : 'No listings yet'}
+          message={
+            hasFilters
+              ? 'Try widening your search — a different category, condition, or price range.'
+              : 'Be the first to list something for your neighbors to find.'
+          }
+        />
+      )}
 
       {data && data.items.length > 0 && (
         <>
@@ -117,17 +135,17 @@ export function BrowsePage() {
           {data.totalPages > 1 && (
             <div className="pagination">
               <button
-                className="form-submit"
+                className="form-submit form-submit-secondary"
                 disabled={data.page === 0}
                 onClick={() => goToPage(data.page - 1)}
               >
                 Previous
               </button>
-              <span>
+              <span className="text-secondary">
                 Page {data.page + 1} of {data.totalPages}
               </span>
               <button
-                className="form-submit"
+                className="form-submit form-submit-secondary"
                 disabled={data.page + 1 >= data.totalPages}
                 onClick={() => goToPage(data.page + 1)}
               >

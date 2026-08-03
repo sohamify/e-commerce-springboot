@@ -1,12 +1,26 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { adminApi } from '../api/adminApi'
+import { ErrorState } from '../components/ErrorState'
+import { StatGridSkeleton } from '../components/Skeleton'
 
 export function DashboardPage() {
-  const { data, isPending, isError } = useQuery({ queryKey: ['admin-dashboard'], queryFn: adminApi.dashboard })
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: ['admin-dashboard'],
+    queryFn: adminApi.dashboard,
+  })
 
-  if (isPending) return <p>Loading&hellip;</p>
-  if (isError || !data) return <p>Could not load dashboard.</p>
+  if (isPending) {
+    return (
+      <section>
+        <h1>Dashboard</h1>
+        <StatGridSkeleton />
+      </section>
+    )
+  }
+  if (isError || !data) {
+    return <ErrorState message="Couldn't load the dashboard." onRetry={() => refetch()} />
+  }
 
   return (
     <section>
