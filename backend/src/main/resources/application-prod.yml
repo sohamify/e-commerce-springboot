@@ -24,6 +24,40 @@ spring:
       project-id: e-commerce-bb89d
   flyway:
     enabled: true
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 app:
   storage:
     bucket: ${STORAGE_BUCKET:e-commerce-bb89d.firebasestorage.app}
+  cors:
+    allowed-origins: https://ecommerce-bb89d-storefront.web.app,https://ecommerce-bb89d-storefront.firebaseapp.com,https://ecommerce-bb89d-admin.web.app,https://ecommerce-bb89d-admin.firebaseapp.com
+  jwt:
+    # No default: fail fast on boot rather than silently signing tokens with a guessable key.
+    secret: ${JWT_SECRET}
+    access-token-ttl: 15m
+  refresh-token:
+    ttl: 30d
+  email-verification:
+    ttl: 24h
+  password-reset:
+    ttl: 1h
+  frontend:
+    storefront-base-url: https://ecommerce-bb89d-storefront.web.app
+    admin-base-url: https://ecommerce-bb89d-admin.web.app
+  security:
+    refresh-cookie:
+      # Storefront/admin hosting domains differ from the backend's Cloud Run domain, so this is
+      # a genuinely cross-site cookie: only SameSite=None + Secure gets it sent.
+      secure: true
+      same-site: None
+  mail:
+    from: ${MAIL_FROM:no-reply@ecommerce-bb89d.web.app}

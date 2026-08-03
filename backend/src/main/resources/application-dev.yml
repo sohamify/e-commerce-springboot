@@ -1,6 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ecommerce
+    # Defaults target docker-compose's published host ports (running the backend
+    # directly on the host). Override DB_HOST/etc. to compose service names when
+    # the backend itself runs as a container in the same compose network.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/ecommerce
     username: dev
     password: dev
   jpa:
@@ -9,16 +12,36 @@ spring:
     show-sql: true
   data:
     redis:
-      host: localhost
+      host: ${REDIS_HOST:localhost}
       port: 6379
   cloud:
     gcp:
       project-id: e-commerce-bb89d
       pubsub:
-        emulator-host: localhost:8085
+        emulator-host: ${PUBSUB_EMULATOR_HOST:localhost:8085}
   flyway:
     enabled: true
 app:
   storage:
     bucket: ecommerce-dev
-    emulator-host: http://localhost:4443
+    emulator-host: ${STORAGE_EMULATOR_HOST:http://localhost:4443}
+  jwt:
+    # Dev-only signing key so the stack boots with zero setup. Never reused in prod (JWT_SECRET
+    # there has no default and fails fast if unset).
+    secret: ${JWT_SECRET:dev-only-signing-key-do-not-use-in-production-min-32-bytes}
+    access-token-ttl: 15m
+  refresh-token:
+    ttl: 30d
+  email-verification:
+    ttl: 24h
+  password-reset:
+    ttl: 1h
+  frontend:
+    storefront-base-url: http://localhost:5173
+    admin-base-url: http://localhost:5174
+  security:
+    refresh-cookie:
+      # localhost:8080 and localhost:5173/5174 are same-site (only the port differs), so Lax
+      # over plain HTTP is enough for the cookie to travel on the frontend's XHR calls.
+      secure: false
+      same-site: Lax

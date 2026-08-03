@@ -1,0 +1,1 @@
+ALTER TABLE listing_tags ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT now();
