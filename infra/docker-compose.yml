@@ -9,6 +9,11 @@ services:
     ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -23,6 +28,46 @@ services:
     image: fsouza/fake-gcs-server
     command: -scheme http -port 4443 -public-host localhost:4443
     ports: ["4443:4443"]
+
+  # --- app services: the full stack for local pre-push smoke testing ---
+
+  backend:
+    build:
+      context: ../backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      STORAGE_EMULATOR_HOST: http://fake-gcs-server:4443
+    ports: ["8080:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      pubsub-emulator:
+        condition: service_started
+      fake-gcs-server:
+        condition: service_started
+
+  storefront:
+    build:
+      context: ../frontend/storefront
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    ports: ["5173:80"]
+    depends_on:
+      - backend
+
+  admin:
+    build:
+      context: ../frontend/admin
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    ports: ["5174:80"]
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
