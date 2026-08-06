@@ -1,18 +1,16 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
-import { ConditionBadge } from '../components/ConditionBadge'
+import { CheckoutForm } from '../components/CheckoutForm'
 import { EmptyState } from '../components/EmptyState'
+import { Sheet } from '../components/Sheet'
 import { Skeleton } from '../components/Skeleton'
-import { apiErrorMessage } from '../lib/apiError'
 
+/** Standalone route kept for deep-linking / back-button — rendered inside the same Sheet
+ * styling as the in-place checkout opened from ListingDetailPage, instead of a bare page. */
 export function CheckoutPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [delivery, setDelivery] = useState<'PICKUP' | 'SHIPPING'>('PICKUP')
-  const [address, setAddress] = useState('')
-  const [error, setError] = useState<string | undefined>()
 
   const {
     data: listing,
@@ -23,11 +21,9 @@ export function CheckoutPage() {
     queryFn: () => listingsApi.get(id!),
   })
 
-  const purchaseMutation = useMutation({
-    mutationFn: () => listingsApi.purchase(id!),
-    onSuccess: () => navigate('/purchases'),
-    onError: (err) => setError(apiErrorMessage(err, 'Could not complete this purchase.')),
-  })
+  function close() {
+    navigate(id ? `/listings/${id}` : '/browse')
+  }
 
   if (isPending) {
     return (
@@ -50,7 +46,7 @@ export function CheckoutPage() {
         title="Listing not found"
         message="It may have been removed, or the link is off."
         action={
-          <Link className="form-submit" to="/">
+          <Link className="form-submit" to="/browse">
             Back to browsing
           </Link>
         }
@@ -73,67 +69,8 @@ export function CheckoutPage() {
   }
 
   return (
-    <section className="checkout-page">
-      <h1>Checkout</h1>
-
-      <div className="checkout-summary">
-        {listing.photoUrls[0] && <img src={listing.photoUrls[0]} alt={listing.title} />}
-        <div>
-          <h2>{listing.title}</h2>
-          <ConditionBadge condition={listing.condition} />
-          <p className="listing-detail-price">${listing.price.toFixed(2)}</p>
-          <p className="text-secondary">Sold by {listing.seller.displayName}</p>
-          <p className="checkout-scarcity">1 of 1 — first to buy gets it.</p>
-        </div>
-      </div>
-
-      {error && <p className="form-message form-message-error">{error}</p>}
-
-      <form
-        className="checkout-form"
-        onSubmit={(e) => {
-          e.preventDefault()
-          purchaseMutation.mutate()
-        }}
-      >
-        <fieldset className="form-field-group">
-          <legend className="form-field-label">Delivery</legend>
-          <label className="checkout-radio-option">
-            <input
-              type="radio"
-              name="delivery"
-              checked={delivery === 'PICKUP'}
-              onChange={() => setDelivery('PICKUP')}
-            />
-            Local pickup{listing.location ? ` (${listing.location})` : ''}
-          </label>
-          <label className="checkout-radio-option">
-            <input
-              type="radio"
-              name="delivery"
-              checked={delivery === 'SHIPPING'}
-              onChange={() => setDelivery('SHIPPING')}
-            />
-            Shipping
-          </label>
-        </fieldset>
-
-        {delivery === 'SHIPPING' && (
-          <label className="form-field">
-            <span className="form-field-label">Shipping address</span>
-            <textarea
-              className="form-field-input"
-              required
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </label>
-        )}
-
-        <button className="form-submit" type="submit" disabled={purchaseMutation.isPending}>
-          Confirm purchase — ${listing.price.toFixed(2)}
-        </button>
-      </form>
-    </section>
+    <Sheet open onClose={close} variant="auto" title="Checkout">
+      <CheckoutForm listing={listing} onSuccess={() => navigate('/purchases')} />
+    </Sheet>
   )
 }

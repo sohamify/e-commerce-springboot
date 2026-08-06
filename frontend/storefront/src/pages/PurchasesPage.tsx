@@ -19,7 +19,7 @@ export function PurchasesPage() {
           title="No purchases yet"
           message="Items you buy will show up here."
           action={
-            <Link className="form-submit" to="/">
+            <Link className="form-submit" to="/browse">
               Start browsing
             </Link>
           }

@@ -226,16 +226,6 @@
 
 /* Browse / search */
 
-.browse-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-8);
-}
-
-.browse-filters .form-field-input {
-  flex: 1 1 160px;
-}
-
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -315,12 +305,6 @@
   margin: 0;
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-12);
-}
-
 /* Listing form */
 
 .listing-form {
@@ -356,28 +340,49 @@
 /* Listing detail */
 
 .listing-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-16);
+}
+
+.listing-detail-columns {
   display: grid;
   grid-template-columns: minmax(260px, 480px) 1fr;
   gap: 32px;
 }
 
 @media (max-width: 720px) {
-  .listing-detail-page {
+  .listing-detail-columns {
     grid-template-columns: 1fr;
   }
 }
 
 .listing-detail-photo-main {
+  position: relative;
   aspect-ratio: 1 / 1;
   background: var(--code-bg);
   border-radius: var(--radius-md);
   overflow: hidden;
+  touch-action: pan-y;
+  transition: transform var(--duration-panel) var(--ease-out);
+}
+
+.listing-detail-photo-main.dragging {
+  transition: none;
 }
 
 .listing-detail-photo-main img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.listing-detail-photo-main img.active {
+  opacity: 1;
 }
 
 .listing-detail-thumbnails {
@@ -421,6 +426,44 @@
 .listing-detail-sold {
   color: #e5484d;
   font-weight: 500;
+}
+
+.listing-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-24);
+}
+
+.listing-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+  min-width: 0;
+}
+
+.listing-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-16);
+}
+
+@media (min-width: 900px) {
+  .listing-detail-body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--sp-32);
+  }
+
+  .listing-detail-info {
+    flex: 1;
+  }
+
+  .listing-detail-sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: calc(var(--header-height, 60px) + var(--sp-24));
+  }
 }
 
 .listing-detail-actions {
