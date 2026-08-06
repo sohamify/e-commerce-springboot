@@ -1,120 +1,120 @@
-import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
+import { FilterDrawer } from '../components/FilterDrawer'
 import { ListingCard } from '../components/ListingCard'
-import { ListingGridSkeleton } from '../components/Skeleton'
-import { LISTING_CATEGORIES, LISTING_CONDITIONS } from '../types/listing'
+import { ListingCardSkeleton, ListingGridSkeleton } from '../components/Skeleton'
+import { ScrollRail } from '../components/ScrollRail'
+import { LISTING_CATEGORIES } from '../types/listing'
 import type { ListingCategory, ListingCondition } from '../types/listing'
+import { EMPTY_LISTING_FILTERS, type ListingFilterValues } from '../types/listingFilters'
 
 export function BrowsePage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
-  const params = useMemo(
+  const filterValues: ListingFilterValues = useMemo(
     () => ({
-      q: searchParams.get('q') ?? undefined,
-      category: (searchParams.get('category') as ListingCategory) || undefined,
-      condition: (searchParams.get('condition') as ListingCondition) || undefined,
-      minPrice: searchParams.get('minPrice') ?? undefined,
-      maxPrice: searchParams.get('maxPrice') ?? undefined,
-      location: searchParams.get('location') ?? undefined,
-      page: Number(searchParams.get('page') ?? '0'),
+      q: searchParams.get('q') ?? '',
+      category: searchParams.get('category') ?? '',
+      condition: searchParams.get('condition') ?? '',
+      minPrice: searchParams.get('minPrice') ?? '',
+      maxPrice: searchParams.get('maxPrice') ?? '',
+      location: searchParams.get('location') ?? '',
     }),
     [searchParams],
   )
 
-  const hasFilters = Boolean(
-    params.q || params.category || params.condition || params.minPrice || params.maxPrice || params.location,
+  function applyFilters(values: ListingFilterValues) {
+    const next = new URLSearchParams()
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) next.set(key, value)
+    })
+    setSearchParams(next)
+  }
+
+  function toggleCategoryChip(category: string) {
+    applyFilters({ ...filterValues, category: filterValues.category === category ? '' : category })
+  }
+
+  const activeDrawerFilterCount = [
+    filterValues.q,
+    filterValues.condition,
+    filterValues.minPrice,
+    filterValues.maxPrice,
+    filterValues.location,
+  ].filter(Boolean).length
+
+  const hasFilters = activeDrawerFilterCount > 0 || Boolean(filterValues.category)
+
+  const params = useMemo(
+    () => ({
+      q: filterValues.q || undefined,
+      category: (filterValues.category as ListingCategory) || undefined,
+      condition: (filterValues.condition as ListingCondition) || undefined,
+      minPrice: filterValues.minPrice || undefined,
+      maxPrice: filterValues.maxPrice || undefined,
+      location: filterValues.location || undefined,
+    }),
+    [filterValues],
   )
 
-  const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['listings', params],
-    queryFn: () => listingsApi.search(params),
+  const { data, isPending, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['listings', 'browse', params],
+    queryFn: ({ pageParam }) => listingsApi.search({ ...params, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage.page + 1 < lastPage.totalPages ? lastPage.page + 1 : undefined),
   })
 
-  function updateParam(name: string, value: string) {
-    const next = new URLSearchParams(searchParams)
-    if (value) {
-      next.set(name, value)
-    } else {
-      next.delete(name)
-    }
-    next.delete('page')
-    setSearchParams(next)
-  }
+  const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
 
-  function goToPage(page: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set('page', String(page))
-    setSearchParams(next)
-  }
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasNextPage) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) fetchNextPage()
+      },
+      { rootMargin: '400px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
     <section className="browse-page">
       <h1>Browse listings</h1>
 
-      <form className="browse-filters" onSubmit={(e) => e.preventDefault()}>
-        <input
-          className="form-field-input"
-          placeholder="Search title or description"
-          defaultValue={searchParams.get('q') ?? ''}
-          onBlur={(e) => updateParam('q', e.target.value)}
-        />
-        <select
-          className="form-field-input"
-          value={searchParams.get('category') ?? ''}
-          onChange={(e) => updateParam('category', e.target.value)}
-        >
-          <option value="">All categories</option>
+      <div className="browse-sticky-bar">
+        <ScrollRail className="browse-chip-rail" ariaLabel="Quick category filters">
           {LISTING_CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>
+            <button
+              key={c.value}
+              type="button"
+              className={`browse-chip ${filterValues.category === c.value ? 'active' : ''}`}
+              onClick={() => toggleCategoryChip(c.value)}
+            >
               {c.label}
-            </option>
+            </button>
           ))}
-        </select>
-        <select
-          className="form-field-input"
-          value={searchParams.get('condition') ?? ''}
-          onChange={(e) => updateParam('condition', e.target.value)}
-        >
-          <option value="">Any condition</option>
-          {LISTING_CONDITIONS.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        <input
-          className="form-field-input"
-          type="number"
-          min="0"
-          placeholder="Min price"
-          defaultValue={searchParams.get('minPrice') ?? ''}
-          onBlur={(e) => updateParam('minPrice', e.target.value)}
-        />
-        <input
-          className="form-field-input"
-          type="number"
-          min="0"
-          placeholder="Max price"
-          defaultValue={searchParams.get('maxPrice') ?? ''}
-          onBlur={(e) => updateParam('maxPrice', e.target.value)}
-        />
-        <input
-          className="form-field-input"
-          placeholder="Location"
-          defaultValue={searchParams.get('location') ?? ''}
-          onBlur={(e) => updateParam('location', e.target.value)}
-        />
-      </form>
+        </ScrollRail>
+        <button type="button" className="browse-filters-button" onClick={() => setDrawerOpen(true)}>
+          Filters
+          {activeDrawerFilterCount > 0 && <span className="browse-filters-count">{activeDrawerFilterCount}</span>}
+        </button>
+      </div>
+
+      <FilterDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} values={filterValues} onApply={applyFilters} />
 
       {isPending && <ListingGridSkeleton />}
 
       {isError && <ErrorState message="Couldn't load listings." onRetry={() => refetch()} />}
 
-      {data && data.items.length === 0 && (
+      {!isPending && !isError && items.length === 0 && (
         <EmptyState
           title={hasFilters ? 'Nothing matches those filters' : 'No listings yet'}
           message={
@@ -122,37 +122,26 @@ export function BrowsePage() {
               ? 'Try widening your search — a different category, condition, or price range.'
               : 'Be the first to list something for your neighbors to find.'
           }
+          action={
+            hasFilters ? (
+              <button type="button" className="form-submit form-submit-secondary" onClick={() => applyFilters(EMPTY_LISTING_FILTERS)}>
+                Clear filters
+              </button>
+            ) : undefined
+          }
         />
       )}
 
-      {data && data.items.length > 0 && (
+      {items.length > 0 && (
         <>
-          <div className="listing-grid">
-            {data.items.map((listing) => (
+          <div className="listing-grid listing-grid-entrance">
+            {items.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
+            {isFetchingNextPage &&
+              Array.from({ length: 4 }, (_, i) => <ListingCardSkeleton key={`next-${i}`} />)}
           </div>
-          {data.totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="form-submit form-submit-secondary"
-                disabled={data.page === 0}
-                onClick={() => goToPage(data.page - 1)}
-              >
-                Previous
-              </button>
-              <span className="text-secondary">
-                Page {data.page + 1} of {data.totalPages}
-              </span>
-              <button
-                className="form-submit form-submit-secondary"
-                disabled={data.page + 1 >= data.totalPages}
-                onClick={() => goToPage(data.page + 1)}
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <div ref={sentinelRef} className="infinite-scroll-sentinel" aria-hidden="true" />
         </>
       )}
     </section>

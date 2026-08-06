@@ -18,7 +18,7 @@ export function InboxPage() {
           title="No conversations yet"
           message="Message a seller from any listing to start one."
           action={
-            <Link className="form-submit" to="/">
+            <Link className="form-submit" to="/browse">
               Browse listings
             </Link>
           }

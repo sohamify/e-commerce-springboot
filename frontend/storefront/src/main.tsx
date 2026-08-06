@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './styles/forms.css'
 import './styles/listings.css'
+import './styles/structure.css'
 import App from './App.tsx'
 
 const queryClient = new QueryClient()

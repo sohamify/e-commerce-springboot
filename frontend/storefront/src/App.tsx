@@ -6,11 +6,13 @@ import { useBootstrapAuth } from './hooks/useBootstrapAuth'
 import { BrowsePage } from './pages/BrowsePage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { HomePage } from './pages/HomePage'
 import { InboxPage } from './pages/InboxPage'
 import { ListingDetailPage } from './pages/ListingDetailPage'
 import { ListingFormPage } from './pages/ListingFormPage'
 import { LoginPage } from './pages/LoginPage'
 import { MyListingsPage } from './pages/MyListingsPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { PurchasesPage } from './pages/PurchasesPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -31,7 +33,8 @@ function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route element={<Layout />}>
-        <Route path="/" element={<BrowsePage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/browse" element={<BrowsePage />} />
         <Route path="/listings/:id" element={<ListingDetailPage />} />
         <Route path="/sellers/:id" element={<SellerProfilePage />} />
 
@@ -44,6 +47,7 @@ function App() {
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/messages" element={<InboxPage />} />
           <Route path="/messages/:threadId" element={<ThreadPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
     </Routes>
