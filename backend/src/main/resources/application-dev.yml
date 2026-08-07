@@ -52,3 +52,5 @@ app:
     key-secret: ${RAZORPAY_KEY_SECRET:}
     webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
     platform-fee-percent: 10
+    # Route isn't approved on the account yet — flip to true once Razorpay support enables it.
+    route-enabled: ${RAZORPAY_ROUTE_ENABLED:false}

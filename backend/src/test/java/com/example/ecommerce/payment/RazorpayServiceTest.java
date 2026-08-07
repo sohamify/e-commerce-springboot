@@ -25,7 +25,7 @@ class RazorpayServiceTest {
         // RazorpayClient's constructor only stores credentials — no network call — so it's safe
         // to build directly in a unit test.
         RazorpayClient client = new RazorpayClient("rzp_test_0000000000", KEY_SECRET);
-        RazorpayProperties properties = new RazorpayProperties("rzp_test_0000000000", KEY_SECRET, WEBHOOK_SECRET, BigDecimal.TEN);
+        RazorpayProperties properties = new RazorpayProperties("rzp_test_0000000000", KEY_SECRET, WEBHOOK_SECRET, BigDecimal.TEN, true);
         razorpayService = new RazorpayService(client, properties);
     }
 

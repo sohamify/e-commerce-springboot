@@ -53,12 +53,16 @@ class PaymentServiceImplTest {
     private final UUID buyerId = UUID.randomUUID();
     private final UUID listingId = UUID.randomUUID();
 
-    @BeforeEach
-    void setUp() {
-        RazorpayProperties properties = new RazorpayProperties("rzp_test_key", "secret", "webhook-secret", BigDecimal.TEN);
-        paymentService = new PaymentServiceImpl(
+    private PaymentServiceImpl paymentServiceWithRoute(boolean routeEnabled) {
+        RazorpayProperties properties = new RazorpayProperties("rzp_test_key", "secret", "webhook-secret", BigDecimal.TEN, routeEnabled);
+        return new PaymentServiceImpl(
             listingRepository, listingService, payoutAccountRepository, paymentRepository,
             razorpayService, properties, eventPublisher);
+    }
+
+    @BeforeEach
+    void setUp() {
+        paymentService = paymentServiceWithRoute(true);
     }
 
     private Listing activeListing() {
@@ -95,6 +99,20 @@ class PaymentServiceImplTest {
         verify(paymentRepository).save(captor.capture());
         assertEquals(new BigDecimal("10.00"), captor.getValue().getPlatformFeeAmount());
         assertEquals(PaymentStatus.CREATED, captor.getValue().getStatus());
+    }
+
+    @Test
+    void initiatePurchase_routeDisabled_skipsPayoutAccountCheckAndCreatesPlainOrder() {
+        PaymentServiceImpl service = paymentServiceWithRoute(false);
+        when(listingRepository.findById(listingId)).thenReturn(Optional.of(activeListing()));
+        when(razorpayService.createOrder(new BigDecimal("100.00")))
+            .thenReturn(new RazorpayService.OrderResult("order_plain"));
+
+        PurchaseInitiationResponse response = service.initiatePurchase(buyerId, listingId);
+
+        assertEquals("order_plain", response.orderId());
+        verify(payoutAccountRepository, never()).findByUserId(any());
+        verify(razorpayService, never()).createOrderWithTransfer(any(), any(), anyString());
     }
 
     @Test

@@ -1,5 +1,9 @@
 export type PayoutAccountStatus = 'PENDING' | 'ACTIVE' | 'REJECTED'
 
+export type PaymentsConfig = {
+  routeEnabled: boolean
+}
+
 export type PayoutAccountResponse = {
   status: PayoutAccountStatus | null
 }

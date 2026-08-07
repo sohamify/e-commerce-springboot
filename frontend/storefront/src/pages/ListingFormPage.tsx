@@ -45,11 +45,18 @@ export function ListingFormPage() {
   })
 
   // Only the "list something new" path needs a payout account in place — editing an existing
-  // (already-listed) item doesn't re-trigger the check.
+  // (already-listed) item doesn't re-trigger the check. And only while Route is actually
+  // enabled — while Razorpay support hasn't turned it on yet, requiring payouts first would
+  // block listing anything at all.
+  const config = useQuery({
+    queryKey: ['payments-config'],
+    queryFn: () => paymentsApi.getConfig(),
+    enabled: !isEdit,
+  })
   const payoutAccount = useQuery({
     queryKey: ['payout-account'],
     queryFn: () => paymentsApi.getPayoutAccount(),
-    enabled: !isEdit,
+    enabled: !isEdit && config.data?.routeEnabled === true,
   })
 
   if (isEdit && existing.isPending) {
@@ -58,10 +65,10 @@ export function ListingFormPage() {
   if (isEdit && existing.data && existing.data.seller.id !== user?.id) {
     return <p>You can only edit your own listings.</p>
   }
-  if (!isEdit && payoutAccount.isPending) {
+  if (!isEdit && (config.isPending || (config.data?.routeEnabled && payoutAccount.isPending))) {
     return <p>Loading&hellip;</p>
   }
-  if (!isEdit && !payoutAccount.data?.status) {
+  if (!isEdit && config.data?.routeEnabled && !payoutAccount.data?.status) {
     return (
       <EmptyState
         title="Set up payouts to start selling"
