@@ -35,6 +35,10 @@ public class SecurityConfig {
         "/api/auth/resend-verification",
         "/api/auth/forgot-password",
         "/api/auth/reset-password",
+        // Razorpay calls this directly — no JWT to present. Authenticity comes from verifying
+        // X-Razorpay-Signature against the webhook secret inside the handler itself, not from
+        // Spring Security's filter chain.
+        "/api/webhooks/razorpay",
     };
 
     @Value("${app.cors.allowed-origins}")
@@ -61,6 +65,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/listings", "/api/listings/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/*", "/api/users/*/ratings").permitAll()
                 .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/payments/*/refund").hasAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(handling -> handling

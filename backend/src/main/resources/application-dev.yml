@@ -45,3 +45,10 @@ app:
       # over plain HTTP is enough for the cookie to travel on the frontend's XHR calls.
       secure: false
       same-site: Lax
+  razorpay:
+    # No safe fake default — unlike JWT_SECRET, a fabricated key can't actually authenticate
+    # against Razorpay. Drop your own Test Mode key_id/key_secret/webhook secret into env vars.
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+    platform-fee-percent: 10

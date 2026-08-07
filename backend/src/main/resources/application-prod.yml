@@ -61,3 +61,8 @@ app:
       same-site: None
   mail:
     from: ${MAIL_FROM:no-reply@ecommerce-bb89d.web.app}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    platform-fee-percent: 10

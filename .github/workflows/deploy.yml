@@ -50,5 +50,5 @@ jobs:
             --allow-unauthenticated \
             --service-account ecommerce-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --set-env-vars SPRING_PROFILES_ACTIVE=prod,SUPABASE_DB_HOST=db.nxyzbulyzvdjocwumxcv.supabase.co,SUPABASE_DB_USER=postgres,UPSTASH_REDIS_HOST=allowing-squirrel-43503.upstash.io,UPSTASH_REDIS_PORT=6379,MAIL_HOST=smtp-relay.brevo.com,MAIL_PORT=587,MAIL_USERNAME=${{ secrets.MAIL_USERNAME }},MAIL_FROM=sohampanji123@gmail.com \
-            --set-secrets SUPABASE_DB_PASSWORD=supabase-db-password:latest,UPSTASH_REDIS_PASSWORD=upstash-password:latest,JWT_SECRET=jwt-secret:latest,MAIL_PASSWORD=mail-password:latest \
+            --set-secrets SUPABASE_DB_PASSWORD=supabase-db-password:latest,UPSTASH_REDIS_PASSWORD=upstash-password:latest,JWT_SECRET=jwt-secret:latest,MAIL_PASSWORD=mail-password:latest,RAZORPAY_KEY_ID=razorpay-key-id:latest,RAZORPAY_KEY_SECRET=razorpay-key-secret:latest,RAZORPAY_WEBHOOK_SECRET=razorpay-webhook-secret:latest \
             --max-instances 1

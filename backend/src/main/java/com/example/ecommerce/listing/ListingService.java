@@ -21,7 +21,15 @@ public interface ListingService {
 
     List<ListingSummaryResponse> mine(UUID sellerId);
 
-    ListingDetailResponse purchase(UUID buyerId, UUID listingId);
+    /** Atomically claims the listing for the buyer (only succeeds while still ACTIVE) and
+     * returns the updated listing — the one place a listing is ever marked SOLD. Called only
+     * after payment has actually been confirmed (by {@code PaymentService}), never directly
+     * from a controller anymore. */
+    ListingDetailResponse claimForBuyer(UUID buyerId, UUID listingId);
+
+    /** Reverts a SOLD listing back to ACTIVE for resale — used when a captured payment is
+     * refunded (either the losing side of a claim race, or an admin-initiated refund). */
+    void revertToActive(UUID listingId, UUID buyerId);
 
     List<OrderSummaryResponse> purchases(UUID buyerId);
 
