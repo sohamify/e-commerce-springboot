@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,6 +24,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class RazorpayService {
+
+    private static final Logger log = LoggerFactory.getLogger(RazorpayService.class);
 
     /** Rupees <-> paise: every Razorpay amount field is an integer number of paise. */
     private static final int PAISE_PER_RUPEE = 100;
@@ -84,7 +88,7 @@ public class RazorpayService {
 
             return new LinkedAccountResult(accountId, productId, mapActivationStatus(updated.get("activation_status")));
         } catch (RazorpayException e) {
-            throw new RazorpayIntegrationException("Could not set up the payout account with Razorpay", e);
+            throw wrap("Could not set up the payout account with Razorpay", e);
         }
     }
 
@@ -96,7 +100,7 @@ public class RazorpayService {
             Account productConfig = client.product.fetch(accountId, productId);
             return mapActivationStatus(productConfig.get("activation_status"));
         } catch (RazorpayException e) {
-            throw new RazorpayIntegrationException("Could not check payout account status with Razorpay", e);
+            throw wrap("Could not check payout account status with Razorpay", e);
         }
     }
 
@@ -135,7 +139,7 @@ public class RazorpayService {
             Order order = client.orders.create(orderRequest);
             return new OrderResult(order.get("id"));
         } catch (RazorpayException e) {
-            throw new RazorpayIntegrationException("Could not create the Razorpay order", e);
+            throw wrap("Could not create the Razorpay order", e);
         }
     }
 
@@ -178,11 +182,20 @@ public class RazorpayService {
             refundRequest.put("reverse_all", true);
             client.payments.refund(razorpayPaymentId, refundRequest);
         } catch (RazorpayException e) {
-            throw new RazorpayIntegrationException("Could not refund the payment with Razorpay", e);
+            throw wrap("Could not refund the payment with Razorpay", e);
         }
     }
 
     private static long toPaise(BigDecimal rupees) {
         return rupees.multiply(BigDecimal.valueOf(PAISE_PER_RUPEE)).setScale(0, RoundingMode.HALF_UP).longValueExact();
+    }
+
+    /** Logs Razorpay's actual error message (the SDK's {@code RazorpayException} carries only a
+     * message/cause — no structured status/code/field accessors) before collapsing it into the
+     * generic 502 the client gets back, so the real reason a request was rejected is at least
+     * visible server-side. */
+    private static RazorpayIntegrationException wrap(String message, RazorpayException e) {
+        log.error("Razorpay API call failed: {} - {}", message, e.getMessage(), e);
+        return new RazorpayIntegrationException(message + ": " + e.getMessage(), e);
     }
 }
