@@ -35,9 +35,16 @@ const STATUS_COPY = {
  * Shows current status, and the one-time onboarding form when nothing's been submitted yet. */
 export function PayoutSettingsPage() {
   const queryClient = useQueryClient()
-  const { data: account, isPending } = useQuery({
+  const { data: config, isPending: configPending } = useQuery({
+    queryKey: ['payments-config'],
+    queryFn: () => paymentsApi.getConfig(),
+  })
+  const routeEnabled = config?.routeEnabled === true
+
+  const { data: account, isPending: accountPending } = useQuery({
     queryKey: ['payout-account'],
     queryFn: () => paymentsApi.getPayoutAccount(),
+    enabled: routeEnabled,
   })
 
   const [form, setForm] = useState<PayoutAccountFormValues>(emptyForm)
@@ -57,7 +64,7 @@ export function PayoutSettingsPage() {
     return `form-field-input${fieldErrors[field] ? ' has-error' : ''}`
   }
 
-  if (isPending) {
+  if (configPending || (routeEnabled && accountPending)) {
     return <p>Loading&hellip;</p>
   }
 
@@ -69,14 +76,24 @@ export function PayoutSettingsPage() {
         transfers to your bank account automatically, minus our commission.
       </p>
 
-      {account?.status && (
+      {!routeEnabled && (
+        <div className="form-message">
+          <strong>Not available yet</strong>
+          <p className="text-secondary">
+            We're finishing setup with Razorpay for direct payouts. Check back soon — you can
+            still list items in the meantime.
+          </p>
+        </div>
+      )}
+
+      {routeEnabled && account?.status && (
         <div className="form-message">
           <strong>{STATUS_COPY[account.status].label}</strong>
           <p className="text-secondary">{STATUS_COPY[account.status].detail}</p>
         </div>
       )}
 
-      {!account?.status && (
+      {routeEnabled && !account?.status && (
         <>
           {error && <p className="form-message form-message-error">{error}</p>}
 

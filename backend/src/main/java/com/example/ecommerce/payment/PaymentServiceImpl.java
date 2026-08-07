@@ -66,16 +66,23 @@ public class PaymentServiceImpl implements PaymentService {
             throw new CannotBuyOwnListingException();
         }
 
-        SellerPayoutAccount payoutAccount = payoutAccountRepository.findByUserId(listing.getSellerId())
-            .filter(account -> account.getStatus() == PayoutAccountStatus.ACTIVE)
-            .orElseThrow(SellerPayoutNotReadyException::new);
-
         BigDecimal platformFee = listing.getPrice()
             .multiply(razorpayProperties.platformFeePercent())
             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        RazorpayService.OrderResult order = razorpayService.createOrderWithTransfer(
-            listing.getPrice(), platformFee, payoutAccount.getRazorpayAccountId());
+        RazorpayService.OrderResult order;
+        if (razorpayProperties.routeEnabled()) {
+            SellerPayoutAccount payoutAccount = payoutAccountRepository.findByUserId(listing.getSellerId())
+                .filter(account -> account.getStatus() == PayoutAccountStatus.ACTIVE)
+                .orElseThrow(SellerPayoutNotReadyException::new);
+            order = razorpayService.createOrderWithTransfer(
+                listing.getPrice(), platformFee, payoutAccount.getRazorpayAccountId());
+        } else {
+            // Route isn't approved yet — plain order, whole amount into the platform's own
+            // balance. platformFee is still computed and recorded below so the payments row
+            // already carries what the split *should* be once Route is enabled.
+            order = razorpayService.createOrder(listing.getPrice());
+        }
 
         Payment payment = Payment.builder()
             .listingId(listingId)

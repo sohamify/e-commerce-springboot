@@ -118,9 +118,29 @@ public class RazorpayService {
     public record OrderResult(String orderId) {
     }
 
+    /**
+     * Plain order, no Route transfer — the whole amount lands in the platform's own Razorpay
+     * balance. Used while {@code app.razorpay.route-enabled} is false (Route isn't approved on
+     * the account yet); everything downstream (Checkout, signature verification, the webhook)
+     * behaves identically either way, since a payment.captured event doesn't care whether the
+     * order it came from had transfers.
+     */
+    public OrderResult createOrder(BigDecimal amount) {
+        try {
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", toPaise(amount));
+            orderRequest.put("currency", "INR");
+
+            Order order = client.orders.create(orderRequest);
+            return new OrderResult(order.get("id"));
+        } catch (RazorpayException e) {
+            throw wrap("Could not create the Razorpay order", e);
+        }
+    }
+
     /** Creates a Razorpay Order carrying a single Route transfer to the seller's linked account
      * for {@code amount - platformFee}, so the split happens automatically at capture time
-     * instead of requiring a manual settlement afterward. */
+     * instead of requiring a manual settlement afterward. Only called once Route is enabled. */
     public OrderResult createOrderWithTransfer(BigDecimal amount, BigDecimal platformFee, String sellerAccountId) {
         try {
             long amountPaise = toPaise(amount);

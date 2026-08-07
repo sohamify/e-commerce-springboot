@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/apiClient'
 import type {
+  PaymentsConfig,
   PayoutAccountFormValues,
   PayoutAccountResponse,
   PurchaseInitiation,
@@ -10,6 +11,8 @@ import type {
 /** Thin, typed wrappers over every /api/sellers/payout-account and /api/payments/* call —
  * mirrors the style of api/listingsApi.ts. */
 export const paymentsApi = {
+  getConfig: () => apiClient.get<PaymentsConfig>('/api/payments/config').then((r) => r.data),
+
   getPayoutAccount: () => apiClient.get<PayoutAccountResponse>('/api/sellers/payout-account').then((r) => r.data),
 
   createPayoutAccount: (values: PayoutAccountFormValues) =>
