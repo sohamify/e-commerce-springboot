@@ -39,6 +39,19 @@ public interface ListingRepository extends JpaRepository<Listing, UUID> {
         """)
     int claim(@Param("id") UUID id, @Param("buyerId") UUID buyerId);
 
+    /**
+     * Conditional update: reverts a listing a specific buyer had claimed back to ACTIVE, so a
+     * refunded sale becomes sellable again. Guarded on both id and buyerId so it's a no-op if
+     * the listing has since moved on for any other reason.
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+        UPDATE Listing l SET l.status = com.example.ecommerce.listing.ListingStatus.ACTIVE,
+            l.buyerId = null, l.soldAt = null
+        WHERE l.id = :id AND l.buyerId = :buyerId AND l.status = com.example.ecommerce.listing.ListingStatus.SOLD
+        """)
+    int revertToActive(@Param("id") UUID id, @Param("buyerId") UUID buyerId);
+
     @Query(value = """
         SELECT l.id, l.seller_id, l.title, l.description, l.price, l.condition, l.category,
                l.location, l.status, l.buyer_id, l.sold_at, l.created_at, l.updated_at

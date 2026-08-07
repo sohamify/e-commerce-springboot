@@ -10,6 +10,8 @@ import com.example.ecommerce.listing.dto.OrderSummaryResponse;
 import com.example.ecommerce.messaging.MessagingService;
 import com.example.ecommerce.messaging.dto.MessageRequest;
 import com.example.ecommerce.messaging.dto.ThreadSummaryResponse;
+import com.example.ecommerce.payment.PaymentService;
+import com.example.ecommerce.payment.dto.PurchaseInitiationResponse;
 import com.example.ecommerce.storage.PhotoStorageService;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
@@ -37,12 +39,17 @@ public class ListingController {
     private final ListingService listingService;
     private final PhotoStorageService photoStorageService;
     private final MessagingService messagingService;
+    private final PaymentService paymentService;
 
     public ListingController(
-            ListingService listingService, PhotoStorageService photoStorageService, MessagingService messagingService) {
+            ListingService listingService,
+            PhotoStorageService photoStorageService,
+            MessagingService messagingService,
+            PaymentService paymentService) {
         this.listingService = listingService;
         this.photoStorageService = photoStorageService;
         this.messagingService = messagingService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping("/photos")
@@ -75,9 +82,12 @@ public class ListingController {
         return listingService.mine(principal.userId());
     }
 
+    /** Kicks off a purchase — creates a Razorpay order (with the seller's Route transfer) rather
+     * than completing the sale synchronously; the listing is only actually marked SOLD once
+     * payment is confirmed via /api/payments/verify or the payment.captured webhook. */
     @PostMapping("/{id}/purchase")
-    public ListingDetailResponse purchase(@AuthenticationPrincipal JwtPrincipal principal, @PathVariable UUID id) {
-        return listingService.purchase(principal.userId(), id);
+    public ResponseEntity<PurchaseInitiationResponse> purchase(@AuthenticationPrincipal JwtPrincipal principal, @PathVariable UUID id) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.initiatePurchase(principal.userId(), id));
     }
 
     @GetMapping("/purchases")

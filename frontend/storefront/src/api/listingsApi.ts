@@ -47,8 +47,6 @@ export const listingsApi = {
       .then((r) => r.data.url)
   },
 
-  purchase: (id: string) => apiClient.post<ListingDetail>(`/api/listings/${id}/purchase`).then((r) => r.data),
-
   purchases: () => apiClient.get<OrderSummary[]>('/api/listings/purchases').then((r) => r.data),
 
   sales: () => apiClient.get<OrderSummary[]>('/api/listings/sales').then((r) => r.data),

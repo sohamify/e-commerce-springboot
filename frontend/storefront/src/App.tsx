@@ -13,6 +13,7 @@ import { ListingFormPage } from './pages/ListingFormPage'
 import { LoginPage } from './pages/LoginPage'
 import { MyListingsPage } from './pages/MyListingsPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { PayoutSettingsPage } from './pages/PayoutSettingsPage'
 import { PurchasesPage } from './pages/PurchasesPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -48,6 +49,7 @@ function App() {
           <Route path="/messages" element={<InboxPage />} />
           <Route path="/messages/:threadId" element={<ThreadPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/payouts" element={<PayoutSettingsPage />} />
         </Route>
       </Route>
     </Routes>

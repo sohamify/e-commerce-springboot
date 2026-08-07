@@ -162,7 +162,7 @@ public class ListingServiceImpl implements ListingService {
 
     @Override
     @Transactional
-    public ListingDetailResponse purchase(UUID buyerId, UUID listingId) {
+    public ListingDetailResponse claimForBuyer(UUID buyerId, UUID listingId) {
         Listing listing = requireListing(listingId);
         if (listing.getSellerId().equals(buyerId)) {
             throw new CannotBuyOwnListingException();
@@ -174,6 +174,12 @@ public class ListingServiceImpl implements ListingService {
         }
 
         return get(listingId);
+    }
+
+    @Override
+    @Transactional
+    public void revertToActive(UUID listingId, UUID buyerId) {
+        listingRepository.revertToActive(listingId, buyerId);
     }
 
     @Override

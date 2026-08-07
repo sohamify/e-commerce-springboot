@@ -113,6 +113,32 @@ for s in supabase-db-password upstash-redis-password; do
 done
 ```
 
+## 5b. Secret Manager (Razorpay)
+
+Same pattern as step 5 — three secrets for Route payments. Get real Test Mode values from your
+Razorpay dashboard (Settings → API Keys, and Settings → Webhooks for the webhook secret once
+you've configured the webhook URL in step 7's follow-up).
+
+```bash
+gcloud secrets create razorpay-key-id --replication-policy=automatic
+gcloud secrets create razorpay-key-secret --replication-policy=automatic
+gcloud secrets create razorpay-webhook-secret --replication-policy=automatic
+
+gcloud secrets versions add razorpay-key-id --data-file=-
+gcloud secrets versions add razorpay-key-secret --data-file=-
+gcloud secrets versions add razorpay-webhook-secret --data-file=-
+
+for s in razorpay-key-id razorpay-key-secret razorpay-webhook-secret; do
+  gcloud secrets add-iam-policy-binding "$s" \
+    --member="serviceAccount:ecommerce-backend-runtime@e-commerce-bb89d.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+done
+```
+
+In the Razorpay dashboard, point the webhook at
+`https://<your-cloud-run-url>/api/webhooks/razorpay`, subscribed to at least `payment.captured`
+and `payment.failed` — the secret you set there must match `razorpay-webhook-secret` above.
+
 ## 6. Firebase Hosting sites
 
 Requires the Firebase CLI logged into an account with access to `e-commerce-bb89d`

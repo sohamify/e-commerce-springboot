@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { listingsApi } from '../api/listingsApi'
+import { paymentsApi } from '../api/paymentsApi'
+import { EmptyState } from '../components/EmptyState'
 import { apiErrorMessage, apiFieldErrors } from '../lib/apiError'
 import { useAuthStore } from '../store/authStore'
 import { LISTING_CATEGORIES, LISTING_CONDITIONS } from '../types/listing'
@@ -42,11 +44,35 @@ export function ListingFormPage() {
     enabled: isEdit,
   })
 
+  // Only the "list something new" path needs a payout account in place — editing an existing
+  // (already-listed) item doesn't re-trigger the check.
+  const payoutAccount = useQuery({
+    queryKey: ['payout-account'],
+    queryFn: () => paymentsApi.getPayoutAccount(),
+    enabled: !isEdit,
+  })
+
   if (isEdit && existing.isPending) {
     return <p>Loading listing&hellip;</p>
   }
   if (isEdit && existing.data && existing.data.seller.id !== user?.id) {
     return <p>You can only edit your own listings.</p>
+  }
+  if (!isEdit && payoutAccount.isPending) {
+    return <p>Loading&hellip;</p>
+  }
+  if (!isEdit && !payoutAccount.data?.status) {
+    return (
+      <EmptyState
+        title="Set up payouts to start selling"
+        message="Found pays you directly through Razorpay when your item sells — add your bank details first."
+        action={
+          <Link className="form-submit" to="/payouts">
+            Set up payouts
+          </Link>
+        }
+      />
+    )
   }
 
   // Keyed by id so a fresh instance mounts (with the right lazy initial state) whenever we

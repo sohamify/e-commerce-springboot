@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore'
  * Purchases, Sales, Messages). Reachable on desktop too, just not linked from the desktop nav. */
 const LINKS = [
   { to: '/my-listings', label: 'My listings', description: 'Manage what you’ve listed for sale.' },
+  { to: '/payouts', label: 'Payouts', description: 'Set up how you get paid when something sells.' },
   { to: '/listings/new', label: 'Sell an item', description: 'List something new for your neighbors to find.' },
   { to: '/purchases', label: 'Purchases', description: 'Things you’ve bought.' },
   { to: '/sales', label: 'Sales', description: 'Things you’ve sold.' },
