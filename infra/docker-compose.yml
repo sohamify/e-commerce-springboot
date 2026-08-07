@@ -40,6 +40,13 @@ services:
       REDIS_HOST: redis
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       STORAGE_EMULATOR_HOST: http://fake-gcs-server:4443
+      # No defaults on purpose — an empty key_id/key_secret authenticates as "nobody" and
+      # Razorpay rejects it with "Authentication failed" rather than failing at boot. Put real
+      # Test Mode values in infra/.env (gitignored) as RAZORPAY_KEY_ID=..., etc; compose picks
+      # that file up automatically when run from this directory.
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
     ports: ["8080:8080"]
     depends_on:
       postgres:
